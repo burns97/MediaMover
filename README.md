@@ -32,7 +32,7 @@ Run `python MediaMover.py --help` for full option details.
 ### Detection
 
 - **Screenshots** — identified by the absence of camera EXIF tags (LensModel, FNumber, ISO, ShutterSpeedValue)
-- **Digital zoom** — identified by `EXIF:DigitalZoomRatio` > 1.0 (pinch-to-zoom beyond the optical lens)
+- **Digital zoom** — identified by `EXIF:DigitalZoomRatio` > 1.1 (pinch-to-zoom beyond the optical lens; threshold accounts for telephoto lens calibration noise)
 
 ### Usage
 
@@ -42,12 +42,18 @@ python MediaReview.py --dry-run -s <srcdir>
 
 # Flag and rename files
 python MediaReview.py -s <srcdir>
+
+# Re-evaluate [DZ] flags — strip false positives from previous runs
+python MediaReview.py --reevaluate --dry-run -s <srcdir>
+python MediaReview.py --reevaluate -s <srcdir>
 ```
 
 Flagged files are renamed with codes before the extension:
 - `photo.jpg` → `photo_[SS].jpg` (screenshot)
 - `photo.jpg` → `photo_[DZ].jpg` (digital zoom)
 - `photo_[SS][DZ].jpg` (both)
+
+The `--reevaluate` flag re-checks files previously flagged with `_[DZ]` and strips the flag if their `DigitalZoomRatio` is now within the threshold (<= 1.1) or absent. This is useful after adjusting the detection threshold.
 
 A `review_report.csv` file is written to the source directory with details on every scanned file.
 
