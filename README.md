@@ -46,8 +46,8 @@ python MediaReview.py -s <srcdir>
 
 Flagged files are renamed with codes before the extension:
 - `photo.jpg` → `photo_[SS].jpg` (screenshot)
-- `photo.jpg` → `photo_[DZ2.0].jpg` (digital zoom with ratio)
-- `photo_[SS][DZ2.0].jpg` (both)
+- `photo.jpg` → `photo_[DZ].jpg` (digital zoom)
+- `photo_[SS][DZ].jpg` (both)
 
 A `review_report.csv` file is written to the source directory with details on every scanned file.
 

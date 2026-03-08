@@ -72,7 +72,7 @@ def review_photos(src_dir, dry_run):
                     flags.append("SS")
                     counts["screenshots"] += 1
                 if zoom_ratio is not None:
-                    flags.append(f"DZ{zoom_ratio}")
+                    flags.append("DZ")
                     counts["digital_zoom"] += 1
 
                 renamed_to = ""
