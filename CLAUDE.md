@@ -37,6 +37,22 @@ EXIF tags checked in priority order: `EXIF:DateTimeOriginal`, `RIFF:DateTimeOrig
 
 Output logs (`success_copy.txt` and `failed_copy.txt`) are written to the destination directory.
 
+## MediaDuplicates.py
+
+Single-file script for detecting and reviewing duplicate photos/videos. Key flow:
+
+1. **`main()`** — CLI argument parsing via `argparse`, orchestrates scan → hash → group → report → review pipeline
+2. **`scan_files()`** — Walks source directory, collects `FileInfo` dataclass for each media file
+3. **`hash_all_files()`** — Computes SHA-256 (all files) and perceptual hash via `imagehash.average_hash` (images only)
+4. **`find_exact_duplicates()`** — Groups files by SHA-256 hash
+5. **`find_near_duplicates()`** — Pairwise Hamming distance comparison with Union-Find clustering
+6. **`merge_groups()`** — Merges overlapping exact and near-duplicate groups
+7. **`gather_metadata()`** — Fetches EXIF dates/dimensions for display
+8. **`DuplicateReviewApp`** — Tkinter viewer with grid view and full-size view, keyboard-driven KEEP/DELETE marking
+9. **`write_report()`** — CSV output to `<srcdir>/duplicates_report.csv`
+
+Dependencies: `Pillow`, `imagehash`, `pillow-heif` (optional). HEIC support degrades gracefully if `pillow-heif` is missing.
+
 ## Notes
 
 - No test suite exists. There are `_test/` and `test/` directories but they are untracked scratch directories.
