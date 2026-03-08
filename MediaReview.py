@@ -22,6 +22,8 @@ def main():
     parser.add_argument("-s", "--srcdir", required=True, help="Directory to scan")
     parser.add_argument("-n", "--dry-run", action="store_true",
                         help="Show what would be flagged without renaming files")
+    parser.add_argument("-r", "--reevaluate", action="store_true",
+                        help="Re-examine files already flagged as [DZ] and strip the flag if no longer warranted")
     args = parser.parse_args()
 
     src_dir = args.srcdir.strip()
@@ -34,7 +36,60 @@ def main():
     if dry_run:
         print("*** DRY RUN — no files will be renamed ***")
 
+    if args.reevaluate:
+        reevaluate_dz_flags(src_dir, dry_run)
+
     review_photos(src_dir, dry_run)
+
+
+def reevaluate_dz_flags(src_dir, dry_run):
+    print("Re-evaluating [DZ] flags...")
+    stripped = 0
+    kept = 0
+
+    with exiftool.ExifToolHelper() as et:
+        for root, dirs, files in os.walk(src_dir):
+            for name in files:
+                if "_[DZ]" not in name:
+                    continue
+
+                ext = os.path.splitext(name)[1].lower()
+                if ext not in IMAGE_EXTENSIONS:
+                    continue
+
+                filepath = os.path.join(root, name)
+
+                try:
+                    metadata = et.get_tags(filepath, ["EXIF:DigitalZoomRatio"])
+                except Exception as e:
+                    print(f"  Error reading EXIF for {filepath}: {e}")
+                    continue
+
+                tags = metadata[0] if metadata else {}
+                ratio = tags.get("EXIF:DigitalZoomRatio")
+                still_dz = False
+                if ratio is not None:
+                    try:
+                        if float(ratio) > 1.1:
+                            still_dz = True
+                    except (ValueError, TypeError):
+                        pass
+
+                if still_dz:
+                    kept += 1
+                    continue
+
+                new_name = name.replace("_[DZ]", "")
+                new_path = os.path.join(root, new_name)
+                stripped += 1
+
+                if dry_run:
+                    print(f"  Would strip [DZ]: {name} -> {new_name}")
+                else:
+                    os.rename(filepath, new_path)
+                    print(f"  Stripped [DZ]: {name} -> {new_name}")
+
+    print(f"Reevaluation done: {stripped} stripped, {kept} kept\n")
 
 
 def review_photos(src_dir, dry_run):
@@ -122,7 +177,7 @@ def get_digital_zoom_ratio(tags):
     if ratio is not None:
         try:
             ratio = float(ratio)
-            if ratio > 1.0:
+            if ratio > 1.1:
                 return ratio
         except (ValueError, TypeError):
             pass
