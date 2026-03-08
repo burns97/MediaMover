@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+test/
+failed_copy.txt
+success_copy.txt
+exiftool_files/
+exiftool*
